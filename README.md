@@ -4,15 +4,21 @@ Chrome Extension allowing users to preview links and images in-page. Get it from
 
 ## Demo
 
-https://i.imgur.com/afmwg7G.mp4
+[Click to View Demo](https://i.imgur.com/afmwg7G.mp4)
+
+## Suggestions Welcome
+
+This extension is still in early stage development, so if you have suggestions on how to improve it, but you can't contribute the changes yourself, please send me a message following the contact link from the extension's options page.
 
 ## Options Page
 
 When you first install the extension, the options page will open automatically.
 
-You can re-open the options page by right clicking the extension from within the extensions menu, and clicking "Options" to open them in a new tab.
+You can re-open the options page by right clicking the extension from within the extensions menu, and clicking "Options" to open them in a new tab. Simply clicking the extension will also open the options page, but in a popup instead of a new tab.
 
-Simply clicking the textion will also open the options page, but in a popup instead of a new tab.
+In there, you will find a bunch of options to customise the extension based on your needs. I encourage you to play around with them until you find something that works for you.
+
+The options will be synced to your Chrome Sync account, if you use it. Meaning that once you edit them on one machine, they'll be available on all the others as well.
 
 ## Unpacked Loading
 
@@ -21,7 +27,7 @@ If you want to modify the extension, you'll need to load it as an "unpacked exte
 - Clone this repo or download a zip of it and unzip it on your machine
 - Go to chrome://extensions in your browser
 - Click "Load unpacked"
-- Choose the "src" folder and click OK
+- Choose the "src" folder and confirm
 
 You might want to disable the official extension while you're using the unpacked version, otherwise they will both work in parallel and will result in strange behavior.
 
