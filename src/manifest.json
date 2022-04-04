@@ -1,0 +1,46 @@
+{
+  "action": {
+    "default_title": "Prevue Popup Options",
+    "default_popup": "options.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["prevue.css"],
+      "js": ["prevue.js"],
+      "all_frames": true
+    }
+  ],
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "disable-csp",
+      "enabled": false,
+      "path": "rules.json"
+    }]
+  },
+  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "512": "pp.png"
+  },
+  "manifest_version": 3,
+  "name": "Prevue Popup",
+  "options_page": "options.html",
+  "permissions": [
+    "tabs",
+    "history",
+    "storage",
+    "scripting",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback"
+  ],
+  "version": "0.3.2",
+  "web_accessible_resources": [
+    {
+      "resources": ["prevue.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
