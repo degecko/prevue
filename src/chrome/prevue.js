@@ -7,15 +7,12 @@
     window.Prevue = class {
         constructor () {
             this.el = {}
-            this.iframeBaseUrl = chrome.runtime.getURL('/prevue.html')
-
-            this.resizing = false
             this.onRight = false
+            this.resizing = false
+            this.iframeBaseUrl = chrome.runtime.getURL('/prevue.html')
         }
 
         init () {
-            // console.log(`💥 Prevue Popup ${reloaded ? 're' : ''}loaded successfully.`)
-
             this.listenForBackgroundMessages()
 
             this.retrieveOptions(options => {
@@ -96,6 +93,11 @@
             this.el.sidePreviewImage.removeAttribute('src')
             this.el.sidePreviewIframe.removeAttribute('src')
             this.el.sidePreview.classList.remove('prevue--visible')
+
+            if (this.changedSettings) {
+                this.changedSettings = false
+                this.bg('reinjectPrevueHere')
+            }
         }
 
         close () {
@@ -178,7 +180,7 @@
             }
 
             if (this.options.openAnimation) {
-                this.el.sidePreview.style.transition = 'opacity .2s, left .2s, right .2s';
+                this.el.sidePreview.style.transition = 'opacity .2s, left .2s, right .2s'
             }
 
             const dragger = document.createElement('div')
@@ -252,14 +254,33 @@
             action.onclick = e => this.minimizeMaximize(e)
             this.el.sidePreviewActions.appendChild(action)
 
+            action = document.createElement('div')
+            action.innerHTML = this.cogIconSvg()
+            action.className = 'prevue--action-settings'
+            action.title = 'Prevue Options'
+            action.onclick = () => {
+                if (this.url.startsWith(chrome.runtime.getURL('options.html'))) {
+                    this.url = this.previousUrl + ''
+                    this.previousUrl = null
+                } else {
+                    this.previousUrl = this.url + ''
+                    this.url = chrome.runtime.getURL('options.html')
+                    this.changedSettings = true
+                }
+
+                this.openIframePopup()
+            }
+
+            this.el.sidePreviewActions.appendChild(action)
+
             this.el.sidePreview.appendChild(this.el.sidePreviewActions)
             document.body.appendChild(this.el.sidePreview)
         }
 
         getImageZoomPerc () {
             const image = this.el.sidePreviewImage
-            const xPerc = (image.clientWidth / image.naturalWidth * 100)
-            const yPerc = (image.clientHeight / image.naturalHeight * 100)
+            const xPerc = image.clientWidth / image.naturalWidth * 100
+            const yPerc = image.clientHeight / image.naturalHeight * 100
 
             return Math.round(Math.min(xPerc, yPerc))
         }
@@ -291,12 +312,11 @@
         openIframePopup () {
             clearTimeout(this.enableCspTimeout)
 
-            this.el.sidePreviewIframe.style.display = 'block'
             this.el.sidePreviewImageWrapper.style.display = 'none'
+            this.el.sidePreviewIframe.style.display = 'block'
+            this.el.sidePreview.classList.add('prevue--visible')
 
             this.setTitle()
-
-            this.el.sidePreview.classList.add('prevue--visible')
 
             this.bg('disableCsp', () => {
                 this.el.sidePreviewIframe.src = `${this.iframeBaseUrl}?${btoa(this.url)}`
@@ -340,8 +360,8 @@
 
         setTitle (append = '') {
             this.el.sidePreviewTitleWrapper.children[0].innerHTML = this.visualUrl(append)
-            this.el.sidePreviewTitleWrapper.children[0].href = this.url
             this.el.sidePreviewTitleWrapper.children[0].title = this.url
+            this.el.sidePreviewTitleWrapper.children[0].href = this.url
         }
 
         isExternal () {
@@ -432,6 +452,10 @@
             return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>`;
         }
 
+        cogIconSvg () {
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>`
+        }
+
         /**
          * Simple debugging tool for measuring times.
          */
@@ -509,19 +533,24 @@
         }
 
         listen (els, event, handler) {
-            els.map((el, i) => {
-                el.addEventListener(event, e => {
-                    if (this.isContextInvalidated()) return
-
-                    handler(e)
-                }, false)
-            })
+            els.map(el => el.addEventListener(event, e => this.isContextInvalidated() || handler(e), false))
         }
 
         listenTo (event, handler) {
             this.listen([document.body], event, handler)
         }
 
+        /**
+         * The chrome.* API calls fail when the extension gets updated or reloaded,
+         * which basically translates to the fact that this specific
+         * content script injection is not usable anymore.
+         * So I'm invalidating its event listeners.
+         *
+         * Note that a subsequent content injection will typically take place
+         * when this happens, which basically "replaces" this one.
+         * This check was added because they're actually
+         * being executed in parallel.
+         */
         isContextInvalidated () {
             if (this.contextInvalidated) {
                 return true

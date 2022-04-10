@@ -1,7 +1,11 @@
+chrome = chrome || browser
+
 chrome.manifest = chrome.runtime.getManifest()
 
 console.clear()
 console.log(`Loaded Prevue v${chrome.manifest.version} at ${new Date()}`)
+
+const urlsToDisableCsp = {}
 
 function injectPrevue (tabId, includingCss = false) {
     chrome.scripting.executeScript({
@@ -20,6 +24,7 @@ function reinjectPrevueEverywhere (includingCss = false) {
         windows.map(win => {
             win.tabs.map(tab => {
                 if (tab.status === 'complete'
+                    && ! tab.active
                     && tab.url?.length
                     && /^(https?|file|chrome-extension):/i.test(tab.url)
                     && ! /^https?:\/\/chrome\.google\.com\//.test(tab.url)) {
@@ -41,25 +46,18 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
     else if (req.action === 'reinjectPrevueEverywhere') {
         reinjectPrevueEverywhere()
     }
-    
-    else if (req.action === 'reportingIframeUrl' && /^(https?|file|chrome-extension):/i.test(req.url)) {
-        chrome.tabs.sendMessage(sender.tab.id, { action: 'reportingIframeUrl', url: req.url })
+
+    else if (req.action === 'reinjectPrevueHere') {
+        injectPrevue(sender.tab.id)
+    }
+
+    else if (['reportingIframeUrl', 'reportingMetaRedirect'].includes(req.action)
+        && /^(https?|file|chrome-extension):/i.test(req.url)) {
+        chrome.tabs.sendMessage(sender.tab.id, { action: req.action, url: req.url })
     }
 
     else if (req.action === 'pressedEscape') {
         chrome.tabs.sendMessage(sender.tab.id, { action: 'pressedEscape' })
-    }
-
-    else if (req.action === 'disableCsp') {
-        chrome.declarativeNetRequest.updateEnabledRulesets({
-            enableRulesetIds: ['disable-csp']
-        })
-    }
-
-    else if (req.action === 'enableCsp') {
-        chrome.declarativeNetRequest.updateEnabledRulesets({
-            disableRulesetIds: ['disable-csp']
-        })
     }
 
     respond({})
@@ -67,14 +65,34 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
     return true
 })
 
-chrome.runtime.onInstalled.addListener(function (details) {
+chrome.webRequest.onHeadersReceived.addListener(req => {
+    const cspHeaders = ['x-frame-options', 'content-security-policy', 'cross-origin-opener-policy', 'cross-origin-resource-policy', 'content-security-policy-report-only']
+    
+    if (matchesExtensionPage(req.originUrl) || urlsToDisableCsp[req.url]) {
+        req.responseHeaders = req.responseHeaders.filter(header => {
+            if (header.name === 'location') {
+                urlsToDisableCsp[header.value] = true
+
+                setTimeout(() => delete urlsToDisableCsp[header.value + ''], 5e3)
+            }
+
+            return ! cspHeaders.includes(header.name.toLowerCase())
+        })
+    }
+    
+    return { responseHeaders: req.responseHeaders }
+}, { urls: ['<all_urls>'] }, ['blocking', 'responseHeaders'])
+
+chrome.runtime.onInstalled.addListener(details => {
     if (details.reason === 'install') {
         chrome.tabs.create({ url: chrome.runtime.getURL('/options.html') })
-    } else if (details.reason === 'update') {
-        //
     }
 
     reinjectPrevueEverywhere(true)
 
     return true
 })
+
+function matchesExtensionPage (url) {
+    return url.startsWith(chrome.runtime.getURL('prevue.html'))
+}

@@ -1,0 +1,41 @@
+{
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "Prevue Popup Options",
+    "default_popup": "options.html",
+    "default_icon": {
+      "512": "pp.png"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "allidoisdev@gmail.com",
+      "strict_min_version": "42.0"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["prevue.css"],
+      "js": ["prevue.js"],
+      "all_frames": true
+    }
+  ],
+  "manifest_version": 2,
+  "name": "Prevue Popup",
+  "permissions": [
+    "<all_urls>",
+    "tabs",
+    "history",
+    "storage",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+  "version": "0.4.2",
+  "web_accessible_resources": [
+    "prevue.html"
+  ]
+}
