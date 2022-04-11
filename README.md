@@ -1,6 +1,6 @@
 # Prevue Popup
 
-Chrome Extension allowing users to preview links and images in-page. Get it from the [official Chrome Web Store](https://chrome.google.com/webstore/detail/prevue-popup/afencccmfcofdgnigbenkpplpanigajd).
+Browser Extension allowing users to preview links and images in-page. Get it from the [official Chrome Web Store](https://chrome.google.com/webstore/detail/prevue-popup/afencccmfcofdgnigbenkpplpanigajd) or from [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/prevue-popup/).
 
 ## Demo
 
