@@ -478,13 +478,19 @@
         }
 
         initInsideIframe () {
-            const metaRedirect = document.documentElement.innerHTML
-                .match(/<meta content=(.?)0;url=(.+)\1[^>]+?http-equiv=.?refresh.?>/i)
+            let metaRedirect = false
+
+            document.documentElement.innerHTML.replace(/<meta[^>]+>/i, meta => {
+                if (/http-equiv=.?refresh/i.test(meta)) {
+                    metaRedirect = meta.match(/url=([^"']+)/i)[1]
+                }
+            })
 
             if (metaRedirect) {
-                this.bg({ action: 'reportingMetaRedirect', url: metaRedirect[2] })
+                this.bg({ action: 'reportingMetaRedirect', url: metaRedirect })
             } else {
-                this.bg({ action: 'reportingIframeUrl', url: location.href })
+                // Todo: Fix this. For pages which use multiple iframes, it will report the wrong final URL.
+                // this.bg({ action: 'reportingIframeUrl', url: location.href })
 
                 this.restyleEmbeddedSitesScrollbars()
                 this.passthroughEscapeKeyPressEvent()

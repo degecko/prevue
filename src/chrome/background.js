@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
     }
     
     else if (req.action === 'reportingIframeUrl' && /^(https?|file|chrome-extension):/i.test(req.url)) {
-        chrome.tabs.sendMessage(sender.tab.id, { action: 'reportingIframeUrl', url: req.url })
+        chrome.tabs.sendMessage(sender.tab.id, req)
     }
 
     else if (req.action === 'pressedEscape') {

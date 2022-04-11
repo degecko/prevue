@@ -479,10 +479,14 @@
         }
 
         initInsideIframe () {
-            this.bg({ action: 'reportingIframeUrl', url: location.href })
+            const isInsideExtensionsIframe = location.ancestorOrigins[0].startsWith('chrome-extension://')
 
-            this.restyleEmbeddedSitesScrollbars()
-            this.passthroughEscapeKeyPressEvent()
+            if (isInsideExtensionsIframe) {
+                this.bg({ action: 'reportingIframeUrl', url: location.href })
+
+                this.restyleEmbeddedSitesScrollbars()
+                this.passthroughEscapeKeyPressEvent()
+            }
         }
 
         passthroughEscapeKeyPressEvent () {

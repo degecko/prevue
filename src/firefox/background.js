@@ -31,7 +31,7 @@ function reinjectPrevueEverywhere (includingCss = false) {
                     // console.log(tab.id, tab.url)
                     injectPrevue(tab.id, includingCss)
                 } else {
-                    console.log(tab)
+                    // console.log(tab)
                 }
             })
         })
@@ -53,7 +53,11 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
 
     else if (['reportingIframeUrl', 'reportingMetaRedirect'].includes(req.action)
         && /^(https?|file|chrome-extension):/i.test(req.url)) {
-        chrome.tabs.sendMessage(sender.tab.id, { action: req.action, url: req.url })
+        urlsToDisableCsp[req.url] = true
+
+        setTimeout(() => delete urlsToDisableCsp[req.url + ''], 5e3)
+
+        chrome.tabs.sendMessage(sender.tab.id, req)
     }
 
     else if (req.action === 'pressedEscape') {
@@ -67,7 +71,7 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
 
 chrome.webRequest.onHeadersReceived.addListener(req => {
     const cspHeaders = ['x-frame-options', 'content-security-policy', 'cross-origin-opener-policy', 'cross-origin-resource-policy', 'content-security-policy-report-only']
-    
+
     if (matchesExtensionPage(req.originUrl) || urlsToDisableCsp[req.url]) {
         req.responseHeaders = req.responseHeaders.filter(header => {
             if (header.name === 'location') {
