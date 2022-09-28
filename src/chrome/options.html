@@ -123,65 +123,20 @@
 
     <div class="f option">
         <div class="label">
-            <strong>Trigger Keys</strong>
+            <strong>Triggers</strong>
         </div>
 
         <div class="content">
-            <div class="f" style="margin-left: -4px;">
-                <div style="width: 50%; padding: 4px;">
-                    <div class="checkbox">
-                        <input type="checkbox" id="ctrlTrigger" name="ctrlTrigger">
-                        <label for="ctrlTrigger"><span>CTRL</span></label>
-                    </div>
-                </div>
-
-                <div style="width: 50%; padding: 4px;">
-                    <div class="checkbox">
-                        <input type="checkbox" id="altTrigger" name="altTrigger">
-                        <label for="altTrigger"><span>ALT</span></label>
-                    </div>
-                </div>
-
-                <div style="width: 50%; padding: 4px;">
-                    <div class="checkbox">
-                        <input type="checkbox" id="shiftTrigger" name="shiftTrigger">
-                        <label for="shiftTrigger"><span>SHIFT</span></label>
-                    </div>
-                </div>
-
-                <div style="width: 50%; padding: 4px;">
-                    <div class="checkbox">
-                        <input type="checkbox" id="metaTrigger" name="metaTrigger">
-                        <label for="metaTrigger"><span>CMD</span></label>
-                    </div>
-                </div>
+            <div class="f">
+                <div><strong>Hold Key</strong></div>
+                <div><strong>Action</strong></div>
             </div>
-        </div>
-    </div>
 
-    <div class="f nw option">
-        <div class="label">
-            <strong>Trigger Actions</strong>
-        </div>
+            <div id="triggers"></div>
 
-        <div class="content">
-            <div class="checkbox">
-                <input type="checkbox" id="keydownTrigger" name="keydownTrigger">
-                <label for="keydownTrigger"><span>Pressing a Trigger Key</span></label>
+            <div>
+                <button type="button" id="add-trigger" class="default">+ Add Trigger</button>
             </div>
-            <small>Pressing a Triggered Key will open the previously touched/hovered URL/image.</small>
-
-            <div class="checkbox" style="margin-top: 24px;">
-                <input type="checkbox" id="mousemoveTrigger" name="mousemoveTrigger">
-                <label for="mousemoveTrigger"><span>Holding a Trigger Key + Cursor Over</span></label>
-            </div>
-            <small>Holding a Trigger Key and moving the cursor over a URL/image will open it.</small>
-
-            <div class="checkbox" style="margin-top: 24px;">
-                <input type="checkbox" id="dragTrigger" name="dragTrigger">
-                <label for="dragTrigger"><span>URL Dragging</span></label>
-            </div>
-            <small>Dragging &amp; dropping a URL/image anywhere on the page will open it.</small>
         </div>
     </div>
 
@@ -194,7 +149,7 @@
             <div class="f nw">
                 <div style="padding-left: 0; padding-right: .5rem">
                     <div style="margin-bottom: .5rem">Open Delay</div>
-                    <select name="dragTriggerOpenDelay" style="width: 100%">
+                    <select name="triggerOpenDelay" style="width: 100%">
                         <option value="10">10ms</option>
                         <option value="25">25ms</option>
                         <option value="50">50ms</option>
@@ -204,7 +159,7 @@
                 </div>
                 <div style="padding-right: 0; padding-left: .5rem">
                     <div style="margin-bottom: .5rem">Release Delay</div>
-                    <select name="dragTriggerReleaseDelay" style="width: 100%">
+                    <select name="triggerReleaseDelay" style="width: 100%">
                         <option value="400">400ms</option>
                         <option value="500">500ms</option>
                         <option value="600">600ms</option>
@@ -230,7 +185,7 @@
         <div class="content">
             <div class="checkbox">
                 <input type="checkbox" id="escCloseTrigger" name="escCloseTrigger">
-                <label for="escCloseTrigger"><span>Pressing Escape</span></label>
+                <label for="escCloseTrigger"><span>Press Escape</span></label>
             </div>
             <small>Pressing Escape will close the opened link.</small>
 
@@ -242,7 +197,7 @@
 
             <div class="checkbox" style="margin-top: 24px;">
                 <input type="checkbox" id="outsideScrollCloseTrigger" name="outsideScrollCloseTrigger">
-                <label for="outsideScrollCloseTrigger"><span>Scrolling Outside</span></label>
+                <label for="outsideScrollCloseTrigger"><span>Scroll Outside</span></label>
             </div>
             <small>Scrolling outside the URL/image Prevue popup will close the popup.</small>
         </div>

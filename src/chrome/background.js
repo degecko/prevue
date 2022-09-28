@@ -35,8 +35,35 @@ function reinjectPrevueEverywhere (includingCss = false) {
 }
 
 chrome.runtime.onMessage.addListener((req, sender, respond) => {
+    const tabId = sender.tab?.id
+
     if (req.action === 'rememberUrl') {
         chrome.history.addUrl({ url: req.url })
+    }
+
+    else if (req.action === 'setupImprobableApology') {
+        chrome.declarativeNetRequest.updateSessionRules({
+            addRules: [{
+                id: Math.ceil(Math.random() * 1e8),
+                action: {
+                    type: 'redirect',
+                    redirect: { url: sender.tab.url + '#prevue:sorry' }
+                },
+                condition: {
+                    urlFilter: '*',
+                    tabIds: [tabId],
+                    resourceTypes: ['main_frame'],
+                },
+            }],
+        })
+
+        setTimeout(() => {
+            chrome.declarativeNetRequest.getSessionRules(rules => {
+                chrome.declarativeNetRequest.updateSessionRules({
+                    removeRuleIds: rules.map(r => r.id),
+                })
+            })
+        }, 3e3)
     }
 
     else if (req.action === 'reinjectPrevueEverywhere') {
@@ -44,15 +71,15 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
     }
 
     else if (req.action === 'reinjectPrevueHere') {
-        injectPrevue(sender.tab.id)
+        injectPrevue(tabId)
     }
     
     else if (req.action === 'reportingIframeUrl' && /^(https?|file|chrome-extension):/i.test(req.url)) {
-        chrome.tabs.sendMessage(sender.tab.id, req)
+        chrome.tabs.sendMessage(tabId, req)
     }
 
     else if (req.action === 'pressedEscape') {
-        chrome.tabs.sendMessage(sender.tab.id, { action: 'pressedEscape' })
+        chrome.tabs.sendMessage(tabId, { action: 'pressedEscape' })
     }
 
     else if (req.action === 'disableCsp') {

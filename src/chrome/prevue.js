@@ -22,67 +22,95 @@
 
                 this.prebuildHtml((options.width || 50) + (options.widthUnit === 'px' ? 'px' : 'vw'))
 
-                if (this.options.keydownTrigger) {
-                    this.listenTo('keydown', e => this.listener(e))
+                this.setupTriggers();
+            })
+
+            if ((location.hash || '').endsWith('#prevue:sorry')) {
+                alert(`Sorry, the previous link doesn't work with Prevue. It tried to redirect you to the opened URL. You were redirected back to the previous page for your convenience.\n\nUnfortunately, there's no way to prevent this from happening.`)
+
+                location.hash = location.hash.replace('#prevue:sorry', '')
+            }
+        }
+
+        setupTriggers () {
+            Object.keys(this.options.triggers).map(t => {
+                const trigger = this.options.triggers[t]
+                
+                switch (trigger.action) {
+                    case 'click':
+                        this.listenTo('mousedown', e => {
+                            if (e[`${trigger.key}Key`] || ! trigger.key) {
+                                this.searchLinkAndTriggerPopup(e, false, true)
+                                this.url && e.preventDefault()
+                            }
+                        })
+
+                        break
+
+                    case 'mouseover':
+                        this.listenTo('mouseover', e => {
+                            if (e[`${trigger.key}Key`] || ! trigger.key) {
+                                this.searchLinkAndTriggerPopup(e, false, true)
+                            }
+                        })
+
+                        break
+
+                    case 'drag':
+                        this.listenTo('dragstart', () => {
+                            this.dragStart = new Date().getTime()
+                            this.closeAllPreviews()
+                        })
+
+                        this.listenTo('drag', () => this.dragDelta = new Date().getTime() - this.dragStart)
+
+                        this.listenTo('dragend', e => {
+                            if (this.dragDelta >= this.options.triggerOpenDelay &&
+                                this.dragDelta <= this.options.triggerReleaseDelay) {
+                                this.searchLinkAndTriggerPopup(e, true, true)
+                            }
+                        })
+
+                        break
                 }
+            })
 
-                if (this.options.mousemoveTrigger) {
-                    this.listenTo('mousemove', e => this.listener(e, false, true))
-                }
+            if (this.options.escCloseTrigger) {
+                this.listenTo('keydown', e => e.key === 'Escape' && this.close())
+            }
 
-                if (this.options.dragTrigger) {
-                    this.listenTo('dragstart', () => {
-                        this.dragStart = new Date().getTime()
-                        this.closeAllPreviews()
-                    })
+            if (this.options.outsideScrollCloseTrigger) {
+                this.listenTo('scroll', e => this.isMinimized() || this.close())
+                this.listen([window, document.body], 'scroll', e => this.isMinimized() || this.close())
+            }
 
-                    this.listenTo('drag', () => this.dragDelta = new Date().getTime() - this.dragStart)
-
-                    this.listenTo('dragend', e => {
-                        if (this.dragDelta >= this.options.dragTriggerOpenDelay &&
-                            this.dragDelta <= this.options.dragTriggerReleaseDelay) {
-                            this.listener(e, true, true)
-                        }
-                    })
-                }
-
-                if (this.options.escCloseTrigger) {
-                    this.listenTo('keydown', e => e.key === 'Escape' && this.close())
-                }
-
-                if (this.options.outsideScrollCloseTrigger) {
-                    this.listenTo('scroll', e => this.isMinimized() || this.close())
-                    this.listen([window, document.body], 'scroll', e => this.isMinimized() || this.close())
-                }
-
-                if (this.options.outsideClickCloseTrigger) {
-                    this.listenTo('click', e => {
-                        e.target.closest('#prevue--wrapper') || this.isMinimized() || this.close()
-                    })
-                }
-
-                this.listen([window, document.body], 'mousemove', e => {
-                    if (! e.clientX || ! this.resizing) return
-
-                    let width = this.onRight ? window.innerWidth - e.clientX : e.clientX
-                    width = width / window.innerWidth * 100
-
-                    this.el.sidePreview.style.width = width + 'vw'
+            if (this.options.outsideClickCloseTrigger) {
+                this.listenTo('click', e => {
+                    e.target.closest('#prevue--wrapper') || this.isMinimized() || this.close()
                 })
+            }
 
-                this.listen([window, document.body], 'mouseup', e => {
-                    if (! e.clientX || ! this.resizing) return
+            this.listen([window, document.body], 'mousemove', e => {
+                if (! e.clientX || ! this.resizing) return
 
-                    setTimeout(() => this.resizing = false, 200)
+                let width = this.onRight ? window.innerWidth - e.clientX : e.clientX
+                width = width / window.innerWidth * 100
 
-                    if (! this.el.sidePreview.style.width.slice(0, -2)) {
-                        return
-                    }
+                this.el.sidePreview.style.width = width + 'vw'
+            })
 
-                    chrome.storage.sync.set({
-                        width: this.el.sidePreview.style.width.slice(0, -2),
-                        widthUnit: '%'
-                    })
+            this.listen([window, document.body], 'mouseup', e => {
+                if (! e.clientX || ! this.resizing) return
+
+                setTimeout(() => this.resizing = false, 200)
+
+                if (! this.el.sidePreview.style.width.slice(0, -2)) {
+                    return
+                }
+
+                chrome.storage.sync.set({
+                    width: this.el.sidePreview.style.width.slice(0, -2),
+                    widthUnit: '%'
                 })
             })
         }
@@ -125,7 +153,7 @@
             this.el.sidePreview.classList.toggle('prevue--minimized')
         }
 
-        listener (e, isDragging = false, recordEvent = false) {
+        searchLinkAndTriggerPopup (e, isDragging = false, recordEvent = false) {
             if (this.resizing) return
 
             if (! this.specialKeyPressed(e) && ! isDragging) return
@@ -261,14 +289,12 @@
             action.onclick = () => {
                 if (this.url.startsWith(chrome.runtime.getURL('options.html'))) {
                     this.url = this.previousUrl + ''
-                    this.previousUrl = null
+                    this.sidePreview(this.previousUrlType)
                 } else {
-                    this.previousUrl = this.url + ''
                     this.url = chrome.runtime.getURL('options.html')
                     this.changedSettings = true
+                    this.sidePreview('url')
                 }
-
-                this.openIframePopup()
             }
 
             this.el.sidePreviewActions.appendChild(action)
@@ -355,7 +381,10 @@
         updatePreview (type) {
             this.bg({ action: 'rememberUrl', url: this.url })
 
-            this.sidePreview(type)
+            this.previousUrl = this.url + ''
+            this.previousUrlType = type
+
+            this.bg('setupImprobableApology', () => this.sidePreview(type))
         }
 
         setTitle (append = '') {
