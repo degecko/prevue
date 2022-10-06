@@ -22,7 +22,7 @@ function reinjectPrevueEverywhere (includingCss = false) {
                 if (tab.status === 'complete'
                     && ! tab.active
                     && tab.url?.length
-                    && /^(https?|file|chrome-extension):/i.test(tab.url)
+                    && /^(https?|file|[a-z]+-extension):/i.test(tab.url)
                     && ! /^https?:\/\/chrome\.google\.com\//.test(tab.url)) {
                     // console.log(tab.id, tab.url)
                     injectPrevue(tab.id, includingCss)
@@ -74,7 +74,7 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
         injectPrevue(tabId)
     }
     
-    else if (req.action === 'reportingIframeUrl' && /^(https?|file|chrome-extension):/i.test(req.url)) {
+    else if (req.action === 'reportingIframeUrl' && /^(https?|file|[a-z]+-extension):/i.test(req.url)) {
         chrome.tabs.sendMessage(tabId, req)
     }
 

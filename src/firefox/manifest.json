@@ -34,7 +34,7 @@
     "webRequest",
     "webRequestBlocking"
   ],
-  "version": "0.4.4",
+  "version": "0.4.6",
   "web_accessible_resources": [
     "prevue.html"
   ]

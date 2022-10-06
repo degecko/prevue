@@ -22,11 +22,11 @@
 
                 this.prebuildHtml((options.width || 50) + (options.widthUnit === 'px' ? 'px' : 'vw'))
 
-                this.setupTriggers();
+                this.setupTriggers()
             })
 
-            if ((location.hash || '').endsWith('#prevue:sorry')) {
-                alert(`Sorry, the previous link doesn't work with Prevue. It tried to redirect you to the opened URL. You were redirected back to the previous page for your convenience.\n\nUnfortunately, there's no way to prevent this from happening.`)
+            if (/^#prevue:sorry/.test(location.hash || '')) {
+                alert("Sorry, the previous link doesn't work with Prevue. It tried to redirect you to the opened URL. You were redirected back to the previous page for your convenience.\n\nUnfortunately, there's no way to prevent this from happening.")
 
                 location.hash = location.hash.replace('#prevue:sorry', '')
             }

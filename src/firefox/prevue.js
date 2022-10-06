@@ -11,7 +11,7 @@
             this.el = {}
             this.onRight = false
             this.resizing = false
-            this.iframeBaseUrl = chrome.runtime.getURL('/prevue.html')
+            // this.iframeBaseUrl = chrome.runtime.getURL('/prevue.html')
         }
 
         init () {
@@ -87,6 +87,12 @@
                     })
                 })
             })
+
+            if (/^#prevue:sorry/.test(location.hash || '')) {
+                alert("Sorry, the previous link doesn't work with Prevue. It tried to redirect you to the opened URL. You were redirected back to the previous page for your convenience.\n\nUnfortunately, there's no way to prevent this from happening.")
+
+                location.hash = location.hash.replace('#prevue:sorry', '')
+            }
         }
 
         closeAllPreviews () {
@@ -311,7 +317,9 @@
                 return
             }
 
-            this.openIframePopup()
+            this.bg({ action: 'disableCspForUrl', url: this.url.split('?')[0] }, () => {
+                this.openIframePopup()
+            })
         }
 
         openIframePopup () {
@@ -321,7 +329,8 @@
 
             this.setTitle()
 
-            this.el.sidePreviewIframe.src = `${this.iframeBaseUrl}?${btoa(this.url)}`
+            // this.el.sidePreviewIframe.src = `${this.iframeBaseUrl}?${btoa(this.url)}`
+            this.el.sidePreviewIframe.src = this.url
         }
 
         shouldOpenOnTheRight () {

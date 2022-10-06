@@ -26,7 +26,7 @@ function reinjectPrevueEverywhere (includingCss = false) {
                 if (tab.status === 'complete'
                     && ! tab.active
                     && tab.url?.length
-                    && /^(https?|file|chrome-extension):/i.test(tab.url)
+                    && /^(https?|file|[a-z]+-extension):/i.test(tab.url)
                     && ! /^https?:\/\/chrome\.google\.com\//.test(tab.url)) {
                     // console.log(tab.id, tab.url)
                     injectPrevue(tab.id, includingCss)
@@ -51,8 +51,8 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
         injectPrevue(sender.tab.id)
     }
 
-    else if (['reportingIframeUrl', 'reportingMetaRedirect'].includes(req.action)
-        && /^(https?|file|chrome-extension):/i.test(req.url)) {
+    else if (['reportingIframeUrl', 'reportingMetaRedirect', 'disableCspForUrl'].includes(req.action)
+        && /^(https?|file|[a-z]+-extension):/i.test(req.url)) {
         urlsToDisableCsp[req.url] = true
 
         setTimeout(() => delete urlsToDisableCsp[req.url + ''], 5e3)
@@ -70,9 +70,19 @@ chrome.runtime.onMessage.addListener((req, sender, respond) => {
 })
 
 chrome.webRequest.onHeadersReceived.addListener(req => {
-    const cspHeaders = ['x-frame-options', 'content-security-policy', 'cross-origin-opener-policy', 'cross-origin-resource-policy', 'content-security-policy-report-only']
+    if (req.method !== 'GET') {
+        return
+    }
 
-    if (matchesExtensionPage(req.originUrl) || urlsToDisableCsp[req.url]) {
+    const cspHeaders = [
+        'content-security-policy',
+        'content-security-policy-report-only',
+        'cross-origin-opener-policy',
+        'cross-origin-resource-policy',
+        'x-frame-options',
+    ]
+
+    if (urlsToDisableCsp[req.url.split('?')[0]]) {
         req.responseHeaders = req.responseHeaders.filter(header => {
             if (header.name === 'location') {
                 urlsToDisableCsp[header.value] = true
@@ -96,7 +106,3 @@ chrome.runtime.onInstalled.addListener(details => {
 
     return true
 })
-
-function matchesExtensionPage (url) {
-    return url.startsWith(chrome.runtime.getURL('prevue.html'))
-}
