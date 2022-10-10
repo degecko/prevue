@@ -128,13 +128,16 @@
             }
         }
 
+        isOpen () {
+            return this.el.sidePreview.classList.contains('prevue--visible')
+        }
+
         close () {
             if (this.resizing) {
                 return
             }
 
-            this.el.sidePreview.classList.contains('prevue--visible')
-                && this.closeAllPreviews()
+            this.isOpen() && this.closeAllPreviews()
         }
 
         isMinimized () {

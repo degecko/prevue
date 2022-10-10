@@ -12,6 +12,7 @@
             this.onRight = false
             this.resizing = false
             // this.iframeBaseUrl = chrome.runtime.getURL('/prevue.html')
+            this.prevueUrlSuffix = '#_prevue'
         }
 
         init () {
@@ -108,13 +109,16 @@
             }
         }
 
+        isOpen () {
+            return this.el.sidePreview.classList.contains('prevue--visible')
+        }
+
         close () {
             if (this.resizing) {
                 return
             }
 
-            this.el.sidePreview.classList.contains('prevue--visible')
-                && this.closeAllPreviews()
+            this.isOpen() && this.closeAllPreviews()
         }
 
         isMinimized () {
@@ -330,7 +334,7 @@
             this.setTitle()
 
             // this.el.sidePreviewIframe.src = `${this.iframeBaseUrl}?${btoa(this.url)}`
-            this.el.sidePreviewIframe.src = this.url
+            this.el.sidePreviewIframe.src = this.url + (this.url.match(/#/) ? '' : this.prevueUrlSuffix)
         }
 
         shouldOpenOnTheRight () {
@@ -345,12 +349,19 @@
         visualUrl (append = '') {
             let isSecure = /^https:\/\//i.test(this.url)
 
-            return (isSecure ? this.lockIconSvg() : '') + `<div>` + this.url
-                .replace(new RegExp(`^${location.origin}`, 'i'), '')
-                .replace(/^(https?:\/\/)www\./, '$1')
-                .replace(/^http:\/\//i, '')
-                .replace(/^https:\/\//i, '')
-                .replace(/^(!?)([^/]+)/, '$1<strong>$2</strong>') + append + '</div>'
+            return [
+                (isSecure ? this.lockIconSvg() : ''),
+                `<div>`,
+                this.url
+                    .replace(new RegExp(`^${location.origin}`, 'i'), '')
+                    .replace(/^(https?:\/\/)www\./, '$1')
+                    .replace(/^http:\/\//i, '')
+                    .replace(/^https:\/\//i, '')
+                    .replace(new RegExp(`${this.prevueUrlSuffix}$`), '')
+                    .replace(/^(!?)([^/]+)/, '$1<strong>$2</strong>'),
+                append,
+                '</div>'
+            ].join('')
         }
 
         specialKeyPressed (e) {
@@ -368,6 +379,7 @@
 
         setTitle (append = '') {
             this.el.sidePreviewTitleWrapper.children[0].innerHTML = this.visualUrl(append)
+
             this.el.sidePreviewTitleWrapper.children[0].title = this.url
             this.el.sidePreviewTitleWrapper.children[0].href = this.url
         }
@@ -487,6 +499,10 @@
         }
 
         initInsideIframe () {
+            if (! (location.hash || '').endsWith(this.prevueUrlSuffix)) {
+                return
+            }
+
             let metaRedirect = false
 
             document.documentElement.innerHTML.replace(/<meta[^>]+>/i, meta => {
@@ -498,8 +514,7 @@
             if (metaRedirect) {
                 this.bg({ action: 'reportingMetaRedirect', url: metaRedirect })
             } else {
-                // Todo: Fix this. For pages which use multiple iframes, it will report the wrong final URL.
-                // this.bg({ action: 'reportingIframeUrl', url: location.href })
+                this.bg({ action: 'reportingIframeUrl', url: location.href })
 
                 this.restyleEmbeddedSitesScrollbars()
                 this.passthroughEscapeKeyPressEvent()
