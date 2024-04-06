@@ -22,6 +22,10 @@
           "operation": "remove"
         },
         {
+          "header": "cross-origin-embedder-policy",
+          "operation": "remove"
+        },
+        {
           "header": "cross-origin-opener-policy",
           "operation": "remove"
         },

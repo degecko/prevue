@@ -77,6 +77,7 @@ chrome.webRequest.onHeadersReceived.addListener(req => {
     const cspHeaders = [
         'content-security-policy',
         'content-security-policy-report-only',
+        'cross-origin-embedder-policy',
         'cross-origin-opener-policy',
         'cross-origin-resource-policy',
         'x-frame-options',
