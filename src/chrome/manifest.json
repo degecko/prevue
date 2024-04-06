@@ -35,7 +35,7 @@
     "scripting",
     "declarativeNetRequest"
   ],
-  "version": "0.4.7",
+  "version": "0.4.8",
   "web_accessible_resources": [
     {
       "resources": ["options.html", "prevue.html"],
